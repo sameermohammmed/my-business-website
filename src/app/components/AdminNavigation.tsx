@@ -1,50 +1,64 @@
-'use client'
+"use client"
+
 import Link from 'next/link'
-import { FaUser, FaSignOutAlt } from 'react-icons/fa'
-import Image from 'next/image'
-import { useRouter } from 'next/navigation'
+import { usePathname } from 'next/navigation'
+import { FaHome, FaBox, FaTags, FaImages } from 'react-icons/fa'
 
 export default function AdminNavigation() {
-  const router = useRouter()
+  const pathname = usePathname()
 
-  const handleLogout = () => {
-    // Clear any admin session data here
-    router.push('/admin')
-  }
+  const isActive = (path: string) => pathname === path
 
   return (
-    <div className="bg-blue-800 text-white">
-      <div className="max-w-7xl mx-auto">
-        <div className="flex justify-between items-center p-4">
-          {/* Logo and Company Name */}
-          <Link href="/admin/dashboard" className="flex items-center gap-2 text-xl sm:text-2xl font-bold hover:text-blue-200">
-            <div className="h-8 w-8 sm:h-10 sm:w-10 flex items-center justify-center bg-white rounded-full p-1 shadow relative">
-              <Image
-                src="/images/IKLOGO.jpg"
-                alt="I K Engineering Company Logo"
-                fill
-                sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw"
-                className="object-contain"
-                priority
-              />
-            </div>
-            <span className="hidden sm:inline">I K ENGINEERING COMPANY</span>
-            <span className="sm:hidden">I K</span>
+    <nav className="bg-white shadow-sm mb-4">
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+        <div className="flex space-x-8 h-16 items-center">
+          <Link
+            href="/admin"
+            className={`inline-flex items-center px-1 pt-1 border-b-2 text-sm font-medium ${
+              isActive('/admin')
+                ? 'border-blue-500 text-gray-900'
+                : 'border-transparent text-gray-500 hover:border-gray-300 hover:text-gray-700'
+            }`}
+          >
+            <FaHome className="mr-2" />
+            Dashboard
           </Link>
-
-          {/* Admin Navigation */}
-          <div className="flex items-center space-x-6">
-            <Link href="/admin/dashboard" className="hover:text-blue-200">Dashboard</Link>
-            <button
-              onClick={handleLogout}
-              className="flex items-center hover:text-blue-200"
-            >
-              <FaSignOutAlt className="mr-2" />
-              Logout
-            </button>
-          </div>
+          <Link
+            href="/admin/products"
+            className={`inline-flex items-center px-1 pt-1 border-b-2 text-sm font-medium ${
+              isActive('/admin/products')
+                ? 'border-blue-500 text-gray-900'
+                : 'border-transparent text-gray-500 hover:border-gray-300 hover:text-gray-700'
+            }`}
+          >
+            <FaBox className="mr-2" />
+            Products
+          </Link>
+          <Link
+            href="/admin/categories"
+            className={`inline-flex items-center px-1 pt-1 border-b-2 text-sm font-medium ${
+              isActive('/admin/categories')
+                ? 'border-blue-500 text-gray-900'
+                : 'border-transparent text-gray-500 hover:border-gray-300 hover:text-gray-700'
+            }`}
+          >
+            <FaTags className="mr-2" />
+            Categories
+          </Link>
+          <Link
+            href="/admin/gallery"
+            className={`inline-flex items-center px-1 pt-1 border-b-2 text-sm font-medium ${
+              isActive('/admin/gallery')
+                ? 'border-blue-500 text-gray-900'
+                : 'border-transparent text-gray-500 hover:border-gray-300 hover:text-gray-700'
+            }`}
+          >
+            <FaImages className="mr-2" />
+            Gallery
+          </Link>
         </div>
       </div>
-    </div>
+    </nav>
   )
 } 

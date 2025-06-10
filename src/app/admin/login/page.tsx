@@ -1,24 +1,20 @@
 'use client'
-import { useState, useEffect } from 'react'
+
+import { useState } from 'react'
 import { useRouter } from 'next/navigation'
 import Image from 'next/image'
-import { FaUser, FaLock, FaEye, FaEyeSlash } from 'react-icons/fa'
+import { useAuth } from '@/app/context/AuthContext'
 
-export default function AdminLogin() {
+/**
+ * Admin login page component
+ */
+export default function AdminLoginPage() {
   const [username, setUsername] = useState('')
   const [password, setPassword] = useState('')
   const [error, setError] = useState('')
   const [isLoading, setIsLoading] = useState(false)
-  const [showPassword, setShowPassword] = useState(false)
   const router = useRouter()
-
-  useEffect(() => {
-    // Check if already logged in
-    const isLoggedIn = document.cookie.includes('adminLoggedIn=true')
-    if (isLoggedIn) {
-      router.push('/admin/dashboard')
-    }
-  }, [router])
+  const { login } = useAuth()
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
@@ -26,122 +22,101 @@ export default function AdminLogin() {
     setIsLoading(true)
 
     try {
-      // Basic validation
-      if (!username.trim() || !password.trim()) {
-        throw new Error('Please enter both username and password')
-      }
-
-      // Simulate API call delay
-      await new Promise(resolve => setTimeout(resolve, 1000))
-
-      // Check credentials
-      if (username === 'admin' && password === 'admin123') {
-        // Set cookie with expiration
-        const expirationDate = new Date()
-        expirationDate.setDate(expirationDate.getDate() + 1) // 1 day expiration
-        document.cookie = `adminLoggedIn=true; expires=${expirationDate.toUTCString()}; path=/`
-        
-        // Set localStorage for persistence
-        localStorage.setItem('adminLoggedIn', 'true')
-        
-        router.push('/admin/dashboard')
+      const success = await login(username, password)
+      if (success) {
+        router.push('/admin')
       } else {
-        throw new Error('Invalid username or password')
+        setError('Invalid username or password')
       }
     } catch (err) {
-      setError(err instanceof Error ? err.message : 'An error occurred')
+      setError('An error occurred during login')
+      console.error('Login error:', err)
     } finally {
       setIsLoading(false)
     }
   }
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-gray-100">
-      <div className="max-w-md w-full space-y-8 p-8 bg-white rounded-lg shadow-lg">
+    <main className="min-h-screen flex flex-col items-center justify-start bg-gray-50 pt-0 px-4 sm:px-6 lg:px-8">
+      
+      <div className="max-w-md w-full space-y-0">
+        {/* Logo */}
+        <div className="flex justify-center">
+          <div className="h-16 w-16 relative">
+            <Image
+              src="/images/IKLOGO.jpg"
+              alt="IK International Logo"
+              fill
+              className="object-contain"
+              priority
+            />
+          </div>
+        </div>
+
+        {/* Title */}
         <div className="text-center">
-          <h2 className="text-3xl font-bold text-gray-900">Admin Login</h2>
-          <p className="mt-2 text-sm text-gray-600">
-            Please sign in to access the admin dashboard
+          <h2 className="mt-0 text-3xl font-extrabold text-gray-900">
+            Admin Login
+          </h2>
+          <p className="mt-0 text-sm text-gray-600">
+            Sign in to access the admin dashboard
           </p>
         </div>
 
-        {error && (
-          <div className="bg-red-50 border border-red-200 text-red-600 px-4 py-3 rounded-lg">
-            {error}
-          </div>
-        )}
-
-        <form onSubmit={handleSubmit} className="mt-8 space-y-6">
-          <div className="space-y-4">
+        {/* Login Form */}
+        <form className="mt-2 space-y-2" onSubmit={handleSubmit}>
+          <div className="rounded-md shadow-sm space-y-2">
+            {/* Username Field */}
             <div>
-              <label htmlFor="username" className="block text-sm font-medium text-gray-700">
+              <label htmlFor="username" className="sr-only">
                 Username
               </label>
-              <div className="mt-1 relative">
-                <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                  <FaUser className="h-5 w-5 text-gray-400" />
-                </div>
-                <input
-                  id="username"
-                  name="username"
-                  type="text"
-                  required
-                  value={username}
-                  onChange={(e) => setUsername(e.target.value)}
-                  className="appearance-none block w-full pl-10 pr-3 py-2 border border-gray-300 rounded-lg shadow-sm placeholder-gray-400 focus:outline-none focus:ring-blue-500 focus:border-blue-500"
-                  placeholder="Enter your username"
-                />
-              </div>
+              <input
+                id="username"
+                name="username"
+                type="text"
+                required
+                value={username}
+                onChange={(e) => setUsername(e.target.value)}
+                className="appearance-none rounded-lg relative block w-full px-3 py-2 border border-gray-300 placeholder-gray-500 text-gray-900 focus:outline-none focus:ring-blue-500 focus:border-blue-500 focus:z-10 sm:text-sm"
+                placeholder="Username"
+              />
             </div>
 
+            {/* Password Field */}
             <div>
-              <label htmlFor="password" className="block text-sm font-medium text-gray-700">
+              <label htmlFor="password" className="sr-only">
                 Password
               </label>
-              <div className="mt-1 relative">
-                <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                  <FaLock className="h-5 w-5 text-gray-400" />
-                </div>
-                <input
-                  id="password"
-                  name="password"
-                  type={showPassword ? 'text' : 'password'}
-                  required
-                  value={password}
-                  onChange={(e) => setPassword(e.target.value)}
-                  className="appearance-none block w-full pl-10 pr-10 py-2 border border-gray-300 rounded-lg shadow-sm placeholder-gray-400 focus:outline-none focus:ring-blue-500 focus:border-blue-500"
-                  placeholder="Enter your password"
-                />
-                <div className="absolute inset-y-0 right-0 pr-3 flex items-center">
-                  <button
-                    type="button"
-                    onClick={() => setShowPassword(!showPassword)}
-                    className="text-gray-400 hover:text-gray-500 focus:outline-none"
-                  >
-                    {showPassword ? (
-                      <FaEyeSlash className="h-5 w-5" />
-                    ) : (
-                      <FaEye className="h-5 w-5" />
-                    )}
-                  </button>
-                </div>
-              </div>
+              <input
+                id="password"
+                name="password"
+                type="password"
+                required
+                value={password}
+                onChange={(e) => setPassword(e.target.value)}
+                className="appearance-none rounded-lg relative block w-full px-3 py-2 border border-gray-300 placeholder-gray-500 text-gray-900 focus:outline-none focus:ring-blue-500 focus:border-blue-500 focus:z-10 sm:text-sm"
+                placeholder="Password"
+              />
             </div>
           </div>
 
+          {/* Error Message */}
+          {error && (
+            <div className="text-red-600 text-sm text-center">
+              {error}
+            </div>
+          )}
+
+          {/* Submit Button */}
           <div>
             <button
               type="submit"
               disabled={isLoading}
-              className={`w-full flex justify-center py-2 px-4 border border-transparent rounded-lg shadow-sm text-sm font-medium text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 ${
-                isLoading ? 'opacity-50 cursor-not-allowed' : ''
-              }`}
+              className="group relative w-full flex justify-center py-2 px-4 border border-transparent text-sm font-medium rounded-lg text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 disabled:opacity-50 disabled:cursor-not-allowed"
             >
               {isLoading ? (
-                <div className="flex items-center">
-                  <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white mr-2"></div>
-                  Signing in...
-                </div>
+                <div className="animate-spin rounded-full h-5 w-5 border-t-2 border-b-2 border-white"></div>
               ) : (
                 'Sign in'
               )}
@@ -149,6 +124,6 @@ export default function AdminLogin() {
           </div>
         </form>
       </div>
-    </div>
+    </main>
   )
 } 

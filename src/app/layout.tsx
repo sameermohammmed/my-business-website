@@ -1,21 +1,14 @@
 import type { Metadata } from 'next'
 import { Inter } from 'next/font/google'
 import './globals.css'
+import { AuthProvider } from './context/AuthContext'
 import { DataProvider } from './context/DataContext'
 
 const inter = Inter({ subsets: ['latin'] })
 
 export const metadata: Metadata = {
-  title: 'Pro-Cursor',
-  description: 'Your one-stop shop for all your needs',
-  icons: {
-    icon: [
-      { url: '/favicon.svg', type: 'image/svg+xml' }
-    ],
-    apple: [
-      { url: '/apple-icon.png' },
-    ],
-  },
+  title: 'IK International',
+  description: 'IK International - Your Trusted Partner',
 }
 
 export default function RootLayout({
@@ -26,9 +19,11 @@ export default function RootLayout({
   return (
     <html lang="en">
       <body className={inter.className}>
-        <DataProvider>
-          {children}
-        </DataProvider>
+        <AuthProvider>
+          <DataProvider>
+            {children}
+          </DataProvider>
+        </AuthProvider>
       </body>
     </html>
   )

@@ -2,38 +2,22 @@
 
 import React, { createContext, useContext, useState, useEffect } from 'react'
 import { initialCategories, initialProducts } from '../data/initialData'
-
-interface Category {
-  id: number
-  name: string
-}
-
-interface Product {
-  id: number
-  name: string
-  description: string
-  categoryId: number
-  price: number
-  stock: number
-  sku: string
-  specifications: Record<string, string>
-  features: string[]
-  images: { id: number; url: string; isMain: boolean }[]
-  createdAt: number
-  updatedAt: number
-}
+import { Category, Product, GalleryImage } from '@/types'
+import { getCategories } from '@/app/data/categories'
 
 interface DataContextType {
   categories: Category[]
   products: Product[]
+  galleryImages: GalleryImage[]
   isLoading: boolean
   error: string | null
-  addCategory: (category: Omit<Category, 'id'>) => Promise<void>
-  updateCategory: (id: number, category: Partial<Category>) => Promise<void>
-  deleteCategory: (id: number) => Promise<void>
-  addProduct: (product: Omit<Product, 'id' | 'createdAt' | 'updatedAt'>) => Promise<void>
-  updateProduct: (id: number, product: Partial<Product>) => Promise<void>
-  deleteProduct: (id: number) => Promise<void>
+  addCategory: (name: string) => void
+  updateCategory: (id: number, name: string) => void
+  deleteCategory: (id: number) => void
+  addProduct: (product: Omit<Product, 'id' | 'createdAt' | 'updatedAt'>) => void
+  updateProduct: (id: number, product: Partial<Product>) => void
+  deleteProduct: (id: number) => void
+  getPublishedProducts: () => Product[]
   getProductsByCategory: (categoryId: number) => Product[]
   getProductById: (id: number) => Product | undefined
   getCategoryById: (id: number) => Category | undefined
@@ -41,13 +25,22 @@ interface DataContextType {
   addProductImage: (productId: number, image: File) => Promise<void>
   removeProductImage: (productId: number, imageId: number) => Promise<void>
   setMainProductImage: (productId: number, imageId: number) => Promise<void>
+  addGalleryImage: (image: File, title: string, description?: string) => Promise<void>
+  updateGalleryImage: (id: number, updates: Partial<Omit<GalleryImage, 'id' | 'createdAt' | 'updatedAt'>>) => void
+  deleteGalleryImage: (id: number) => void
+  refreshCategories: () => Promise<void>
 }
 
 const DataContext = createContext<DataContextType | undefined>(undefined)
 
+/**
+ * DataProvider component that manages the application's data state
+ * Handles categories and products data with localStorage persistence
+ */
 export function DataProvider({ children }: { children: React.ReactNode }) {
   const [categories, setCategories] = useState<Category[]>([])
   const [products, setProducts] = useState<Product[]>([])
+  const [galleryImages, setGalleryImages] = useState<GalleryImage[]>([])
   const [isLoading, setIsLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
 
@@ -112,45 +105,40 @@ export function DataProvider({ children }: { children: React.ReactNode }) {
     }
   }, [categories, products, isLoading])
 
-  const addCategory = async (category: Omit<Category, 'id'>): Promise<void> => {
+  const addCategory = async (name: string): Promise<void> => {
     try {
       // Validate category name
-      if (!category.name.trim()) {
+      if (!name.trim()) {
         throw new Error('Category name is required')
       }
 
       // Check for duplicate category names
-      if (categories.some(c => c.name.toLowerCase() === category.name.toLowerCase())) {
+      if (categories.some(c => c.name.toLowerCase() === name.toLowerCase())) {
         throw new Error('A category with this name already exists')
       }
 
       const newId = Math.max(0, ...categories.map(c => c.id)) + 1
-      const newCategory = { ...category, id: newId }
-      
+      const newCategory = { id: newId, name, products: [] }
       setCategories(prev => [...prev, newCategory])
-      console.log('Category added successfully:', newCategory)
     } catch (error) {
       console.error('Error adding category:', error)
       throw error
     }
   }
 
-  const updateCategory = async (id: number, category: Partial<Category>): Promise<void> => {
+  const updateCategory = async (id: number, name: string): Promise<void> => {
     try {
-      // Validate category name if provided
-      if (category.name && !category.name.trim()) {
+      // Validate category name
+      if (!name.trim()) {
         throw new Error('Category name is required')
       }
 
       // Check for duplicate category names
-      if (category.name && categories.some(c => 
-        c.id !== id && c.name.toLowerCase() === category.name.toLowerCase()
-      )) {
+      if (categories.some(c => c.id !== id && c.name.toLowerCase() === name.toLowerCase())) {
         throw new Error('A category with this name already exists')
       }
 
-      setCategories(prev => prev.map(c => c.id === id ? { ...c, ...category } : c))
-      console.log('Category updated successfully:', { id, ...category })
+      setCategories(prev => prev.map(c => c.id === id ? { ...c, name } : c))
     } catch (error) {
       console.error('Error updating category:', error)
       throw error
@@ -172,7 +160,6 @@ export function DataProvider({ children }: { children: React.ReactNode }) {
       }
 
       setCategories(prev => prev.filter(c => c.id !== id))
-      console.log('Category deleted successfully:', id)
     } catch (error) {
       console.error('Error deleting category:', error)
       throw error
@@ -191,26 +178,6 @@ export function DataProvider({ children }: { children: React.ReactNode }) {
       if (!product.categoryId) {
         throw new Error('Product category is required')
       }
-      if (product.price < 0) {
-        throw new Error('Product price cannot be negative')
-      }
-      if (product.stock < 0) {
-        throw new Error('Product stock cannot be negative')
-      }
-      if (!product.sku.trim()) {
-        throw new Error('Product SKU is required')
-      }
-
-      // Check if category exists
-      const category = categories.find(c => c.id === product.categoryId)
-      if (!category) {
-        throw new Error('Selected category does not exist')
-      }
-
-      // Check for duplicate SKU
-      if (products.some(p => p.sku.toLowerCase() === product.sku.toLowerCase())) {
-        throw new Error('A product with this SKU already exists')
-      }
 
       const newId = Math.max(0, ...products.map(p => p.id)) + 1
       const now = Date.now()
@@ -218,12 +185,10 @@ export function DataProvider({ children }: { children: React.ReactNode }) {
         ...product,
         id: newId,
         createdAt: now,
-        updatedAt: now,
-        images: product.images || [{ id: Date.now(), url: '/images/placeholder.jpg', isMain: true }]
+        updatedAt: now
       }
 
       setProducts(prev => [...prev, newProduct])
-      console.log('Product added successfully:', newProduct)
     } catch (error) {
       console.error('Error adding product:', error)
       throw error
@@ -232,48 +197,19 @@ export function DataProvider({ children }: { children: React.ReactNode }) {
 
   const updateProduct = async (id: number, product: Partial<Product>): Promise<void> => {
     try {
-      // Check if product exists
-      const existingProduct = products.find(p => p.id === id)
-      if (!existingProduct) {
-        throw new Error('Product not found')
-      }
-
-      // Validate fields if provided
+      // Validate required fields if provided
       if (product.name && !product.name.trim()) {
         throw new Error('Product name is required')
       }
       if (product.description && !product.description.trim()) {
         throw new Error('Product description is required')
       }
-      if (product.price !== undefined && product.price < 0) {
-        throw new Error('Product price cannot be negative')
-      }
-      if (product.stock !== undefined && product.stock < 0) {
-        throw new Error('Product stock cannot be negative')
-      }
-      if (product.sku && !product.sku.trim()) {
-        throw new Error('Product SKU is required')
-      }
 
-      // Check if category exists if provided
-      if (product.categoryId) {
-        const category = categories.find(c => c.id === product.categoryId)
-        if (!category) {
-          throw new Error('Selected category does not exist')
-        }
-      }
-
-      // Check for duplicate SKU if provided
-      if (product.sku && products.some(p => 
-        p.id !== id && p.sku.toLowerCase() === product.sku.toLowerCase()
-      )) {
-        throw new Error('A product with this SKU already exists')
-      }
-
-      setProducts(prev => prev.map(p => 
-        p.id === id ? { ...p, ...product, updatedAt: Date.now() } : p
-      ))
-      console.log('Product updated successfully:', { id, ...product })
+      setProducts(prev => prev.map(p => p.id === id ? {
+        ...p,
+        ...product,
+        updatedAt: Date.now()
+      } : p))
     } catch (error) {
       console.error('Error updating product:', error)
       throw error
@@ -282,62 +218,45 @@ export function DataProvider({ children }: { children: React.ReactNode }) {
 
   const deleteProduct = async (id: number): Promise<void> => {
     try {
-      // Check if product exists
-      const product = products.find(p => p.id === id)
-      if (!product) {
-        throw new Error('Product not found')
-      }
-
       setProducts(prev => prev.filter(p => p.id !== id))
-      console.log('Product deleted successfully:', id)
     } catch (error) {
       console.error('Error deleting product:', error)
       throw error
     }
   }
 
+  const getPublishedProducts = () => {
+    return products.filter(product => product.isPublished)
+  }
+
   const getProductsByCategory = (categoryId: number) => {
-    return products.filter(p => p.categoryId === categoryId)
+    return products.filter(product => product.categoryId === categoryId)
   }
 
   const getProductById = (id: number) => {
-    return products.find(p => p.id === id)
+    return products.find(product => product.id === id)
   }
 
   const getCategoryById = (id: number) => {
-    return categories.find(c => c.id === id)
+    return categories.find(category => category.id === id)
   }
 
   const uploadImage = async (file: File): Promise<string> => {
-    try {
-      // In a real application, this would upload to a server
-      // For now, we'll just return a placeholder URL
-      return '/images/placeholder.jpg'
-    } catch (error) {
-      console.error('Error uploading image:', error)
-      throw error
-    }
+    // In a real application, this would upload to a server
+    // For now, we'll just return a placeholder URL
+    return '/images/placeholder.jpg'
   }
 
   const addProductImage = async (productId: number, image: File): Promise<void> => {
     try {
-      // Check if product exists
-      const product = products.find(p => p.id === productId)
-      if (!product) {
-        throw new Error('Product not found')
-      }
-
       const imageUrl = await uploadImage(image)
-      setProducts(prev => prev.map(p => {
-        if (p.id === productId) {
-          return {
-            ...p,
-            images: [...p.images, { id: Date.now(), url: imageUrl, isMain: false }]
-          }
-        }
-        return p
-      }))
-      console.log('Product image added successfully:', { productId, imageUrl })
+      const newImageId = Math.max(0, ...products
+        .find(p => p.id === productId)?.images.map(img => img.id) || [0]) + 1
+
+      setProducts(prev => prev.map(p => p.id === productId ? {
+        ...p,
+        images: [...p.images, { id: newImageId, url: imageUrl, isMain: false }]
+      } : p))
     } catch (error) {
       console.error('Error adding product image:', error)
       throw error
@@ -346,30 +265,10 @@ export function DataProvider({ children }: { children: React.ReactNode }) {
 
   const removeProductImage = async (productId: number, imageId: number): Promise<void> => {
     try {
-      // Check if product exists
-      const product = products.find(p => p.id === productId)
-      if (!product) {
-        throw new Error('Product not found')
-      }
-
-      // Check if image exists
-      const image = product.images.find(img => img.id === imageId)
-      if (!image) {
-        throw new Error('Image not found')
-      }
-
-      setProducts(prev => prev.map(p => {
-        if (p.id === productId) {
-          const images = p.images.filter(img => img.id !== imageId)
-          // If we removed the main image, make the first remaining image the main one
-          if (images.length > 0 && !images.some(img => img.isMain)) {
-            images[0].isMain = true
-          }
-          return { ...p, images }
-        }
-        return p
-      }))
-      console.log('Product image removed successfully:', { productId, imageId })
+      setProducts(prev => prev.map(p => p.id === productId ? {
+        ...p,
+        images: p.images.filter(img => img.id !== imageId)
+      } : p))
     } catch (error) {
       console.error('Error removing product image:', error)
       throw error
@@ -378,60 +277,94 @@ export function DataProvider({ children }: { children: React.ReactNode }) {
 
   const setMainProductImage = async (productId: number, imageId: number): Promise<void> => {
     try {
-      // Check if product exists
-      const product = products.find(p => p.id === productId)
-      if (!product) {
-        throw new Error('Product not found')
-      }
-
-      // Check if image exists
-      const image = product.images.find(img => img.id === imageId)
-      if (!image) {
-        throw new Error('Image not found')
-      }
-
-      setProducts(prev => prev.map(p => {
-        if (p.id === productId) {
-          return {
-            ...p,
-            images: p.images.map(img => ({
-              ...img,
-              isMain: img.id === imageId
-            }))
-          }
-        }
-        return p
-      }))
-      console.log('Main product image set successfully:', { productId, imageId })
+      setProducts(prev => prev.map(p => p.id === productId ? {
+        ...p,
+        images: p.images.map(img => ({
+          ...img,
+          isMain: img.id === imageId
+        }))
+      } : p))
     } catch (error) {
       console.error('Error setting main product image:', error)
       throw error
     }
   }
 
-  const value = {
-    categories,
-    products,
-    isLoading,
-    error,
-    addCategory,
-    updateCategory,
-    deleteCategory,
-    addProduct,
-    updateProduct,
-    deleteProduct,
-    getProductsByCategory,
-    getProductById,
-    getCategoryById,
-    uploadImage,
-    addProductImage,
-    removeProductImage,
-    setMainProductImage
+  const addGalleryImage = async (image: File, title: string, description?: string): Promise<void> => {
+    try {
+      const imageUrl = await uploadImage(image)
+      const now = Date.now()
+      const newImage: GalleryImage = {
+        id: now,
+        url: imageUrl,
+        title,
+        description: description || '',
+        createdAt: new Date(now),
+        updatedAt: new Date(now)
+      }
+      setGalleryImages(prev => [...prev, newImage])
+    } catch (error) {
+      console.error('Error adding gallery image:', error)
+      throw error
+    }
   }
 
-  return <DataContext.Provider value={value}>{children}</DataContext.Provider>
+  const updateGalleryImage = (id: number, updates: Partial<Omit<GalleryImage, 'id' | 'createdAt' | 'updatedAt'>>): void => {
+    setGalleryImages(prev => prev.map(img => 
+      img.id === id ? { ...img, ...updates, updatedAt: new Date() } : img
+    ))
+  }
+
+  const deleteGalleryImage = (id: number): void => {
+    setGalleryImages(prev => prev.filter(img => img.id !== id))
+  }
+
+  const refreshCategories = async () => {
+    const data = await getCategories()
+    setCategories(data)
+  }
+
+  useEffect(() => {
+    refreshCategories()
+  }, [])
+
+  return (
+    <DataContext.Provider
+      value={{
+        categories,
+        products,
+        galleryImages,
+        isLoading,
+        error,
+        addCategory,
+        updateCategory,
+        deleteCategory,
+        addProduct,
+        updateProduct,
+        deleteProduct,
+        getPublishedProducts,
+        getProductsByCategory,
+        getProductById,
+        getCategoryById,
+        uploadImage,
+        addProductImage,
+        removeProductImage,
+        setMainProductImage,
+        addGalleryImage,
+        updateGalleryImage,
+        deleteGalleryImage,
+        refreshCategories
+      }}
+    >
+      {children}
+    </DataContext.Provider>
+  )
 }
 
+/**
+ * Custom hook to use the data context
+ * @throws {Error} If used outside of DataProvider
+ */
 export function useData() {
   const context = useContext(DataContext)
   if (context === undefined) {
