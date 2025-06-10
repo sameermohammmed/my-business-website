@@ -3,5 +3,6 @@
   "/products/page": "app/products/page.js",
   "/admin/page": "app/admin/page.js",
   "/admin/products/page": "app/admin/products/page.js",
+  "/admin/categories/page": "app/admin/categories/page.js",
   "/admin/login/page": "app/admin/login/page.js"
 }
