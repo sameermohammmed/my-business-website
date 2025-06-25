@@ -1,0 +1,159 @@
+import React, { useEffect, useRef, useState } from 'react'
+import { useData } from '../context/DataContext'
+import Image from 'next/image'
+import { useRouter } from 'next/navigation'
+import { FaChevronLeft, FaChevronRight } from 'react-icons/fa'
+
+// Responsive visible count
+function getVisibleCount(width: number) {
+  if (width < 640) return 1 // mobile
+  if (width < 1024) return 2 // tablet
+  return 4 // desktop
+}
+
+export default function ProductCarousel() {
+  const { products } = useData()
+  const router = useRouter()
+  const [current, setCurrent] = useState(0)
+  const [windowWidth, setWindowWidth] = useState(1200)
+  const intervalRef = useRef<NodeJS.Timeout | null>(null)
+  const carouselRef = useRef<HTMLDivElement>(null)
+  const touchStartX = useRef<number | null>(null)
+  const touchEndX = useRef<number | null>(null)
+
+  // Responsive visible count
+  const VISIBLE_COUNT = getVisibleCount(windowWidth)
+
+  // Shuffle products for random order
+  const [shuffled, setShuffled] = useState<typeof products>([])
+  useEffect(() => {
+    if (products.length) {
+      const arr = [...products].sort(() => Math.random() - 0.5)
+      setShuffled(arr)
+    }
+  }, [products])
+
+  // Track window width for responsiveness
+  useEffect(() => {
+    const handleResize = () => setWindowWidth(window.innerWidth)
+    handleResize()
+    window.addEventListener('resize', handleResize)
+    return () => window.removeEventListener('resize', handleResize)
+  }, [])
+
+  // Auto-slide
+  useEffect(() => {
+    if (shuffled.length <= VISIBLE_COUNT) return
+    intervalRef.current = setInterval(() => {
+      setCurrent((prev) => (prev + 1) % shuffled.length)
+    }, 3000)
+    return () => intervalRef.current && clearInterval(intervalRef.current)
+  }, [shuffled, VISIBLE_COUNT])
+
+  if (!shuffled.length) return null
+
+  const goTo = (idx: number) => setCurrent((idx + shuffled.length) % shuffled.length)
+
+  // Get the products to display in the current window
+  const getVisibleProducts = () => {
+    if (shuffled.length <= VISIBLE_COUNT) return shuffled
+    const visible = []
+    for (let i = 0; i < VISIBLE_COUNT; i++) {
+      visible.push(shuffled[(current + i) % shuffled.length])
+    }
+    return visible
+  }
+
+  const visibleProducts = getVisibleProducts()
+
+  // Touch/swipe handlers for mobile
+  const onTouchStart = (e: React.TouchEvent) => {
+    touchStartX.current = e.touches[0].clientX
+  }
+  const onTouchMove = (e: React.TouchEvent) => {
+    touchEndX.current = e.touches[0].clientX
+  }
+  const onTouchEnd = () => {
+    if (touchStartX.current !== null && touchEndX.current !== null) {
+      const diff = touchStartX.current - touchEndX.current
+      if (Math.abs(diff) > 50) {
+        if (diff > 0) goTo(current + 1) // swipe left
+        else goTo(current - 1) // swipe right
+      }
+    }
+    touchStartX.current = null
+    touchEndX.current = null
+  }
+
+  return (
+    <div className="relative w-full lg:max-w-7xl mx-auto mt-10 mb-16 px-0 sm:px-4">
+      <div
+        className="relative flex items-center bg-white rounded-xl shadow-lg overflow-hidden px-0 sm:px-2 py-6"
+      >
+        {/* Left Arrow (hide on mobile) */}
+        {shuffled.length > VISIBLE_COUNT && windowWidth >= 640 && (
+          <button
+            className="absolute left-2 z-10 bg-white/80 hover:bg-white rounded-full p-2 shadow"
+            onClick={() => goTo(current - 1)}
+            aria-label="Previous"
+          >
+            <FaChevronLeft className="text-2xl text-blue-600" />
+          </button>
+        )}
+        {/* Product Cards */}
+        <div
+          className="flex-1 flex justify-center gap-2 sm:gap-4 md:gap-6 overflow-x-auto scrollbar-hide touch-pan-x"
+          ref={carouselRef}
+          onTouchStart={windowWidth < 640 ? onTouchStart : undefined}
+          onTouchMove={windowWidth < 640 ? onTouchMove : undefined}
+          onTouchEnd={windowWidth < 640 ? onTouchEnd : undefined}
+        >
+          {visibleProducts.map((product) => (
+            <div
+              key={product.id}
+              className="flex flex-col items-center cursor-pointer w-72 sm:w-56 md:w-64 h-80 bg-gray-50 rounded-lg shadow hover:shadow-lg transition p-2 flex-shrink-0"
+              onClick={() => router.push(`/products/${product.id}`)}
+            >
+              <div className="relative w-40 h-40 mb-2">
+                <Image
+                  src={product.images.find(img => img.isMain)?.url || '/images/placeholder.jpg'}
+                  alt={product.name}
+                  fill
+                  className="object-contain rounded-lg"
+                  priority
+                />
+              </div>
+              <h3 className="text-base font-semibold text-gray-900 mb-1 text-center line-clamp-1">{product.name}</h3>
+              <p className="text-gray-600 text-xs line-clamp-2 text-center max-w-[10rem]">{product.description}</p>
+            </div>
+          ))}
+        </div>
+        {/* Right Arrow (hide on mobile) */}
+        {shuffled.length > VISIBLE_COUNT && windowWidth >= 640 && (
+          <button
+            className="absolute right-2 z-10 bg-white/80 hover:bg-white rounded-full p-2 shadow"
+            onClick={() => goTo(current + 1)}
+            aria-label="Next"
+          >
+            <FaChevronRight className="text-2xl text-blue-600" />
+          </button>
+        )}
+      </div>
+      {/* Dots (show only if more than visible count) */}
+      {shuffled.length > VISIBLE_COUNT && (
+        <div className="flex justify-center mt-4 gap-2">
+          {shuffled.map((_, idx) => (
+            idx < shuffled.length && idx % 1 === 0 && (
+              <button
+                key={idx}
+                className={`w-3 h-3 rounded-full ${idx === current ? 'bg-blue-600' : 'bg-gray-300'}`}
+                onClick={() => goTo(idx)}
+                aria-label={`Go to slide ${idx + 1}`}
+              />
+            )
+          ))}
+        </div>
+      )}
+    </div>
+  )
+} 
