@@ -44,7 +44,9 @@ export default function ProductForm({ mode, initialData, onSubmit, onCancel }: P
         price: initialData.price,
         stock: initialData.stock,
         sku: initialData.sku,
-        specifications: initialData.specifications,
+        specifications: Object.fromEntries(
+          Object.entries(initialData.specifications || {}).filter(([_, v]) => typeof v === 'string')
+        ) as Record<string, string>,
         features: initialData.features,
         images: initialData.images,
         isPublished: initialData.isPublished
