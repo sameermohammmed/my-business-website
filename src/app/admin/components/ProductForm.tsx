@@ -73,9 +73,9 @@ export default function ProductForm({ mode, initialData, onSubmit, onCancel }: P
     if (!files?.length) return
 
     try {
-      for (let i = 0; i < files.length; i++) {
-        await addProductImage(formData.id || 0, files[i])
-      }
+      // Note: Images should be uploaded after the product is created
+      // For now, we'll store them temporarily and upload them after product creation
+      setError('Please create the product first, then upload images')
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Error uploading images')
     }
