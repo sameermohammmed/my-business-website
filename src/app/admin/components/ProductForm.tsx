@@ -327,7 +327,7 @@ export default function ProductForm({ mode, initialData, onSubmit, onCancel }: P
                   {!image.isMain && (
                     <button
                       type="button"
-                      onClick={() => setMainProductImage(formData.id || 0, image.id)}
+                      onClick={() => setError('Please create the product first before managing images')}
                       className="px-2 py-1 bg-blue-600 text-white rounded text-sm"
                     >
                       Set as Main
@@ -335,7 +335,7 @@ export default function ProductForm({ mode, initialData, onSubmit, onCancel }: P
                   )}
                   <button
                     type="button"
-                    onClick={() => removeProductImage(formData.id || 0, image.id)}
+                    onClick={() => setError('Please create the product first before managing images')}
                     className="px-2 py-1 bg-red-600 text-white rounded text-sm"
                   >
                     Remove

@@ -50,6 +50,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
           username: 'admin',
           role: 'admin'
         }
+        
         setUser(userData)
         setIsAuthenticated(true)
         // Store in cookie with 1 day expiry
