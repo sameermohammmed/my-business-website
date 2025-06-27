@@ -1,7 +1,7 @@
 'use client'
 
 import { useState } from 'react'
-import { useData } from '@/app/context/DataContext'
+import { useData, useSearch } from '@/app/context/DataContext'
 import ProductDetailView from './ProductDetailView'
 import ProductDetailsModal from './ProductDetailsModal'
 
@@ -12,6 +12,7 @@ import ProductDetailsModal from './ProductDetailsModal'
  */
 export default function ProductList({ categoryId }: { categoryId?: number }) {
   const { products } = useData()
+  const { searchQuery, setSearchQuery } = useSearch()
   const [selectedProduct, setSelectedProduct] = useState<number | null>(null)
   const [isModalOpen, setIsModalOpen] = useState(false)
 
@@ -19,34 +20,42 @@ export default function ProductList({ categoryId }: { categoryId?: number }) {
   const filteredProducts = products
     .filter(product => product.isPublished) // Only show published products
     .filter(product => categoryId ? product.categoryId === categoryId : true)
+    .filter(product => {
+      if (!searchQuery.trim()) return true
+      const queryWords = searchQuery.toLowerCase().split(/\s+/)
+      const fields = [product.name, product.description, product.sku].join(' ').toLowerCase()
+      return queryWords.every(word => fields.includes(word))
+    })
 
   return (
-    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 p-4">
-      {filteredProducts.map((product) => (
-        <div
-          key={product.id}
-          className="bg-white rounded-lg shadow-md overflow-hidden hover:shadow-lg transition-shadow duration-300"
-        >
-          <ProductDetailView
-            product={product}
-            onViewDetails={() => {
-              setSelectedProduct(product.id)
-              setIsModalOpen(true)
+    <div className="w-full">
+      {/* Product Grid */}
+      <div className="grid grid-cols-2 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
+        {filteredProducts.map((product) => (
+          <div
+            key={product.id}
+            className="bg-white rounded-lg shadow-md overflow-hidden transition-transform duration-200 flex flex-col h-full"
+          >
+            <ProductDetailView
+              product={product}
+              onViewDetails={() => {
+                setSelectedProduct(product.id)
+                setIsModalOpen(true)
+              }}
+            />
+          </div>
+        ))}
+        {selectedProduct && (
+          <ProductDetailsModal
+            productId={selectedProduct}
+            isOpen={isModalOpen}
+            onClose={() => {
+              setIsModalOpen(false)
+              setSelectedProduct(null)
             }}
           />
-        </div>
-      ))}
-
-      {selectedProduct && (
-        <ProductDetailsModal
-          productId={selectedProduct}
-          isOpen={isModalOpen}
-          onClose={() => {
-            setIsModalOpen(false)
-            setSelectedProduct(null)
-          }}
-        />
-      )}
+        )}
+      </div>
     </div>
   )
 } 

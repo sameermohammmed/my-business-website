@@ -4,7 +4,8 @@ import Link from 'next/link'
 import { FaSearch, FaBars, FaTimes } from 'react-icons/fa'
 import Image from 'next/image'
 import { useState } from 'react'
-import { useData } from '@/app/context/DataContext'
+import { useData, useSearch } from '@/app/context/DataContext'
+import { useRouter, usePathname } from 'next/navigation'
 
 /**
  * Main navigation component for the website
@@ -14,6 +15,9 @@ export default function Navigation() {
   const [isMenuOpen, setIsMenuOpen] = useState(false)
   const [isSearchOpen, setIsSearchOpen] = useState(false)
   const { categories, products } = useData()
+  const { searchQuery, setSearchQuery } = useSearch()
+  const router = useRouter()
+  const pathname = usePathname()
 
   return (
     <nav className="bg-blue-800 text-white">
@@ -80,6 +84,11 @@ export default function Navigation() {
                 type="text"
                 placeholder="Search..."
                 className="px-4 py-1 rounded-lg text-gray-800 text-sm w-40 focus:outline-none"
+                value={searchQuery}
+                onChange={e => {
+                  setSearchQuery(e.target.value)
+                  if (pathname !== '/products') router.push('/products')
+                }}
               />
               <FaSearch className="absolute right-3 top-2 text-gray-500" />
             </div>
@@ -110,6 +119,11 @@ export default function Navigation() {
                 type="text"
                 placeholder="Search..."
                 className="w-full px-4 py-2 rounded-lg text-gray-800 text-sm focus:outline-none"
+                value={searchQuery}
+                onChange={e => {
+                  setSearchQuery(e.target.value)
+                  if (pathname !== '/products') router.push('/products')
+                }}
               />
               <FaSearch className="absolute right-3 top-3 text-gray-500" />
             </div>

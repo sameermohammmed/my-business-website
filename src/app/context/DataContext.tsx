@@ -6,6 +6,15 @@ import { Category, Product, DataContextType } from '@/types'
 
 const DataContext = createContext<DataContextType | undefined>(undefined)
 
+// Add Search Context
+const SearchContext = createContext<{
+  searchQuery: string
+  setSearchQuery: (q: string) => void
+}>({
+  searchQuery: '',
+  setSearchQuery: () => {},
+})
+
 /**
  * DataProvider component that manages the application's data state
  * Handles categories and products data with localStorage persistence
@@ -303,4 +312,17 @@ export function useData() {
     throw new Error('useData must be used within a DataProvider')
   }
   return context
+}
+
+export function SearchProvider({ children }: { children: React.ReactNode }) {
+  const [searchQuery, setSearchQuery] = useState('')
+  return (
+    <SearchContext.Provider value={{ searchQuery, setSearchQuery }}>
+      {children}
+    </SearchContext.Provider>
+  )
+}
+
+export function useSearch() {
+  return useContext(SearchContext)
 } 

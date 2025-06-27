@@ -1,6 +1,7 @@
 'use client'
 
 import { DataProvider } from './context/DataContext'
+import { SearchProvider } from './context/DataContext'
 import { useEffect, useState } from 'react'
 
 export function Providers({ children }: { children: React.ReactNode }) {
@@ -15,8 +16,10 @@ export function Providers({ children }: { children: React.ReactNode }) {
   }
 
   return (
-    <DataProvider>
-      {children}
-    </DataProvider>
+    <SearchProvider>
+      <DataProvider>
+        {children}
+      </DataProvider>
+    </SearchProvider>
   )
 } 

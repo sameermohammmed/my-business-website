@@ -1,18 +1,18 @@
 'use client'
 
 import React, { useState, useMemo, useEffect } from 'react'
-import { useData } from '../context/DataContext'
+import { useData, useSearch } from '../context/DataContext'
 import Image from 'next/image'
 import ProductDetailView from './ProductDetailView'
 import { useSearchParams } from 'next/navigation'
 
 export default function ProductList() {
   const { products, categories, getCategoryById, isLoading, error } = useData()
+  const { searchQuery, setSearchQuery } = useSearch()
   const searchParams = useSearchParams()
   const [selectedCategory, setSelectedCategory] = useState<number | null>(null)
   const [sortBy, setSortBy] = useState<'name' | 'price' | 'stock'>('name')
   const [sortOrder, setSortOrder] = useState<'asc' | 'desc'>('asc')
-  const [searchQuery, setSearchQuery] = useState('')
   const [selectedProductId, setSelectedProductId] = useState<number | null>(null)
   const [isQuickView, setIsQuickView] = useState(false)
 
@@ -37,14 +37,13 @@ export default function ProductList() {
       filtered = filtered.filter(p => p.categoryId === selectedCategory)
     }
 
-    // Filter by search query
-    if (searchQuery) {
-      const query = searchQuery.toLowerCase()
-      filtered = filtered.filter(p => 
-        p.name.toLowerCase().includes(query) ||
-        p.description.toLowerCase().includes(query) ||
-        p.sku.toLowerCase().includes(query)
-      )
+    // Advanced search logic (partial, multi-word, case-insensitive)
+    if (searchQuery.trim()) {
+      const queryWords = searchQuery.toLowerCase().split(/\s+/)
+      filtered = filtered.filter(p => {
+        const fields = [p.name, p.description, p.sku].join(' ').toLowerCase()
+        return queryWords.every(word => fields.includes(word))
+      })
     }
 
     // Sort products
@@ -124,14 +123,6 @@ export default function ProductList() {
           >
             {sortOrder === 'asc' ? '↑' : '↓'}
           </button>
-
-          <input
-            type="text"
-            placeholder="Search products..."
-            className="px-4 py-2 border rounded-lg flex-grow"
-            value={searchQuery}
-            onChange={(e) => setSearchQuery(e.target.value)}
-          />
         </div>
       </div>
 

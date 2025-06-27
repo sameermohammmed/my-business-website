@@ -2,13 +2,43 @@
 import Link from 'next/link'
 import { FaSearch, FaBars, FaTimes, FaPhone, FaEnvelope, FaWhatsapp } from 'react-icons/fa'
 import Image from 'next/image'
-import { useState } from 'react'
-import { useData } from '../context/DataContext'
+import { useState, useEffect, useRef } from 'react'
+import { useData, useSearch } from '../context/DataContext'
+import { useRouter, usePathname } from 'next/navigation'
 
 export default function Navigation() {
   const [isMenuOpen, setIsMenuOpen] = useState(false)
   const [isSearchOpen, setIsSearchOpen] = useState(false)
   const { categories, products } = useData()
+  const { searchQuery, setSearchQuery } = useSearch()
+  const router = useRouter()
+  const pathname = usePathname()
+  const searchInputRef = useRef(null)
+
+  useEffect(() => {
+    if (pathname !== '/products' && searchQuery) {
+      setSearchQuery('')
+    }
+  }, [pathname])
+
+  useEffect(() => {
+    if (isSearchOpen && searchInputRef.current) {
+      searchInputRef.current.focus()
+    }
+  }, [isSearchOpen])
+
+  useEffect(() => {
+    if (isSearchOpen && pathname === '/products' && searchInputRef.current) {
+      searchInputRef.current.focus()
+    }
+    // If redirected to /products and search is not open, open it and focus
+    if (pathname === '/products' && !isSearchOpen) {
+      setIsSearchOpen(true)
+      setTimeout(() => {
+        if (searchInputRef.current) searchInputRef.current.focus()
+      }, 0)
+    }
+  }, [pathname, isSearchOpen])
 
   return (
     <div className="bg-blue-800 text-white w-full max-lg:overflow-x-auto lg:overflow-x-visible">
@@ -75,6 +105,11 @@ export default function Navigation() {
               type="text"
               placeholder="Search..."
               className="px-4 py-1 rounded-lg text-gray-800 text-sm w-40 focus:outline-none"
+              value={searchQuery}
+              onChange={e => {
+                setSearchQuery(e.target.value)
+                if (pathname !== '/products') router.push('/products')
+              }}
             />
             <FaSearch className="absolute right-3 top-2 text-gray-500" />
           </div>
@@ -98,30 +133,59 @@ export default function Navigation() {
         </div>
         {/* Mobile Navigation Icons */}
         <div className="flex items-center space-x-4 md:hidden z-20 flex-shrink-0">
-          <button 
-            onClick={() => setIsSearchOpen(!isSearchOpen)}
-            className="hover:text-blue-200 flex-shrink-0"
-          >
-            <FaSearch className="text-2xl text-white" />
-          </button>
-          <button 
-            onClick={() => setIsMenuOpen(!isMenuOpen)}
-            className="hover:text-blue-200 flex-shrink-0"
-          >
-            {isMenuOpen ? <FaTimes className="text-3xl text-white" /> : <FaBars className="text-3xl text-white" />}
-          </button>
+          {!isSearchOpen && (
+            <button 
+              onClick={() => {
+                setIsSearchOpen(true)
+                setIsMenuOpen(false)
+              }}
+              className="hover:text-blue-200 flex-shrink-0"
+            >
+              <FaSearch className="text-2xl text-white" />
+            </button>
+          )}
+          {!isSearchOpen && (
+            <button 
+              onClick={() => {
+                setIsMenuOpen(!isMenuOpen)
+                setIsSearchOpen(false)
+              }}
+              className="hover:text-blue-200 flex-shrink-0"
+            >
+              {isMenuOpen ? <FaTimes className="text-3xl text-white" /> : <FaBars className="text-3xl text-white" />}
+            </button>
+          )}
         </div>
         {/* Mobile Search Bar */}
         {isSearchOpen && (
-          <div className="md:hidden px-4 pb-4">
-            <div className="relative">
+          <div className="fixed top-0 left-0 w-full z-50 bg-blue-800 px-4 py-2 flex items-center shadow-lg h-16">
+            <div className="relative flex-1">
               <input
+                ref={searchInputRef}
                 type="text"
                 placeholder="Search..."
-                className="w-full px-4 py-2 rounded-lg text-gray-800 text-sm focus:outline-none"
+                className="w-full px-4 py-2 rounded-lg text-gray-800 text-base focus:outline-none border-2 border-blue-400 shadow-lg"
+                value={searchQuery}
+                onChange={e => {
+                  setSearchQuery(e.target.value)
+                  if (pathname !== '/products') router.push('/products')
+                }}
               />
-              <FaSearch className="absolute right-3 top-3 text-gray-500" />
+              <FaSearch className="absolute right-4 top-1/2 -translate-y-1/2 text-blue-500 text-xl" />
             </div>
+            <button
+              onClick={() => {
+                setIsSearchOpen(false)
+                if (pathname === '/products') {
+                  setSearchQuery('')
+                  setTimeout(() => router.back(), 0)
+                }
+              }}
+              className="ml-3 text-white hover:text-blue-200 text-2xl"
+              aria-label="Close search"
+            >
+              <FaTimes />
+            </button>
           </div>
         )}
         {/* Mobile Menu */}
@@ -148,37 +212,20 @@ export default function Navigation() {
             >
               Gallery
             </Link>
-            <div className="space-y-2">
-              <Link 
-                href="/products" 
-                className="block hover:text-blue-200 py-2"
-                onClick={() => setIsMenuOpen(false)}
-              >
-                Our Products
-              </Link>
-              <div className="pl-4 space-y-2">
-                {categories.map((category) => (
-                  <div key={category.id}>
-                    <h3 className="font-semibold text-blue-200">{category.name}</h3>
-                    <div className="pl-2 space-y-1">
-                      {products
-                        .filter(product => product.categoryId === category.id)
-                        .slice(0, 3)
-                        .map(product => (
-                          <Link
-                            key={product.id}
-                            href={`/products?category=${category.id}`}
-                            className="block text-sm hover:text-blue-200"
-                            onClick={() => setIsMenuOpen(false)}
-                          >
-                            {product.name}
-                          </Link>
-                        ))}
-                    </div>
-                  </div>
-                ))}
-              </div>
-            </div>
+            <Link 
+              href="/products" 
+              className="block hover:text-blue-200 py-2"
+              onClick={() => setIsMenuOpen(false)}
+            >
+              Our Products
+            </Link>
+            <Link 
+              href="/contact" 
+              className="block hover:text-blue-200 py-2"
+              onClick={() => setIsMenuOpen(false)}
+            >
+              Contact
+            </Link>
             {/* Contact Info for Mobile */}
             <div className="flex flex-row gap-4 pt-4 border-t border-blue-900 justify-center">
               <a href="tel:+918309067404" className="flex items-center hover:text-blue-200">
