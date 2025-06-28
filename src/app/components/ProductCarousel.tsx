@@ -117,7 +117,7 @@ export default function ProductCarousel() {
         >
           {visibleProducts.map((product) => (
             <div
-              key={product.id}
+              key={String(product.id)}
               className="flex flex-col items-center cursor-pointer w-72 sm:w-56 md:w-64 h-80 bg-gray-50 rounded-lg shadow hover:shadow-lg transition p-2 flex-shrink-0 group"
               onClick={() => window.open(`/products/${product.id}`, '_blank')}
             >
