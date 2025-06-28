@@ -3,6 +3,7 @@
 import { useRouter } from 'next/navigation'
 import { useData } from '@/app/context/DataContext'
 import ProductForm from '@/app/admin/products/components/ProductForm'
+import { Product } from '@/types'
 
 export default function EditProduct({ params }: { params: { id: string } }) {
   const router = useRouter()
@@ -28,6 +29,14 @@ export default function EditProduct({ params }: { params: { id: string } }) {
     )
   }
 
+  // Filter out undefined values from specifications to match the form's expected type
+  const sanitizedProduct: Omit<Product, 'specifications'> & { specifications: Record<string, string> } = {
+    ...product,
+    specifications: Object.fromEntries(
+      Object.entries(product.specifications || {}).filter(([_, v]) => typeof v === 'string')
+    ) as Record<string, string>
+  }
+
   return (
     <div className="max-w-7xl mx-auto py-6 sm:px-6 lg:px-8">
       <div className="px-4 py-6 sm:px-0">
@@ -42,7 +51,7 @@ export default function EditProduct({ params }: { params: { id: string } }) {
         </div>
 
         <div className="bg-white shadow rounded-lg p-6">
-          <ProductForm mode="edit" initialData={product} />
+          <ProductForm mode="edit" initialData={sanitizedProduct} />
         </div>
       </div>
     </div>

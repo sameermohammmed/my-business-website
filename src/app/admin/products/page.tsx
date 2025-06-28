@@ -10,7 +10,7 @@ import Image from 'next/image'
  * Products management page component
  */
 export default function ProductsPage() {
-  const { products, addProduct, updateProduct, deleteProduct } = useData()
+  const { products, categories, addProduct, updateProduct, deleteProduct } = useData()
   const [isAdding, setIsAdding] = useState(false)
   const [editingProduct, setEditingProduct] = useState<Product | null>(null)
   const [error, setError] = useState('')
@@ -137,7 +137,7 @@ export default function ProductsPage() {
                   </td>
                   <td className="px-6 py-4 whitespace-nowrap">
                     <div className="text-sm text-gray-900">
-                      {product.category?.name || 'Uncategorized'}
+                      {categories.find(cat => cat.id === product.categoryId)?.name || 'Uncategorized'}
                     </div>
                   </td>
                   <td className="px-6 py-4 whitespace-nowrap">

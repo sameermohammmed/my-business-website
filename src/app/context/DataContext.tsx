@@ -116,9 +116,12 @@ export function DataProvider({ children }: { children: React.ReactNode }) {
       }
 
       // Check for duplicate category names
-      if (category.name && categories.some(c => 
-        c.id !== id && c.name.toLowerCase() === category.name.toLowerCase()
-      )) {
+      if (
+        typeof category.name === 'string' && category.name.trim() &&
+        categories.some(c =>
+          c.id !== id && typeof c.name === 'string' && c.name.toLowerCase() === category.name!.toLowerCase()
+        )
+      ) {
         throw new Error('A category with this name already exists')
       }
 

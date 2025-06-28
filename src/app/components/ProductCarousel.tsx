@@ -47,7 +47,12 @@ export default function ProductCarousel() {
     intervalRef.current = setInterval(() => {
       setCurrent((prev) => (prev + 1) % shuffled.length)
     }, 3000)
-    return () => intervalRef.current && clearInterval(intervalRef.current)
+    return () => {
+      if (intervalRef.current) {
+        clearInterval(intervalRef.current)
+        intervalRef.current = null
+      }
+    }
   }, [shuffled, VISIBLE_COUNT])
 
   if (!shuffled.length) return null

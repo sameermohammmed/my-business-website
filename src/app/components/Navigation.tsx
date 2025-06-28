@@ -13,7 +13,7 @@ export default function Navigation() {
   const { searchQuery, setSearchQuery } = useSearch()
   const router = useRouter()
   const pathname = usePathname()
-  const searchInputRef = useRef(null)
+  const searchInputRef = useRef<HTMLInputElement>(null)
 
   useEffect(() => {
     if (pathname !== '/products' && searchQuery) {
