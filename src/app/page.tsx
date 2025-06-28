@@ -17,7 +17,7 @@ export default function Home() {
 
       {/* Features Section */}
       <div className="py-20 bg-gray-50">
-        <div>
+        <div className="max-w-6xl mx-auto px-4">
           <h2 className="text-4xl font-bold text-center mb-16 text-gray-900">Why Choose Us?</h2>
           <div className="grid grid-cols-1 md:grid-cols-3 gap-12">
             <div className="bg-white p-8 rounded-xl shadow-lg text-center transform hover:scale-105 transition-all duration-300">
@@ -59,7 +59,7 @@ export default function Home() {
 
       {/* About Section */}
       <div className="py-20 bg-white">
-        <div>
+        <div className="max-w-6xl mx-auto px-4">
           <div className="grid grid-cols-1 md:grid-cols-2 gap-16 items-center">
             <div>
               <h2 className="text-4xl font-bold mb-8 text-blue-600">About I K Engineering</h2>
@@ -129,7 +129,7 @@ export default function Home() {
 
       {/* Contact Section */}
       <div className="py-20 bg-gray-50">
-        <div>
+        <div className="max-w-6xl mx-auto px-4">
           <h2 className="text-4xl font-bold text-center mb-16 text-gray-900">Contact Us</h2>
           <div className="grid grid-cols-1 md:grid-cols-2 gap-16">
             <div>
@@ -198,7 +198,7 @@ export default function Home() {
 
       {/* Footer */}
       <footer className="bg-blue-800 text-white py-12">
-        <div className="text-center">
+        <div className="max-w-6xl mx-auto px-4 text-center">
           <p className="text-lg">&copy; 2024 I K ENGINEERING COMPANY. All rights reserved.</p>
         </div>
       </footer>

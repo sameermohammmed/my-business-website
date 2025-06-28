@@ -1,7 +1,8 @@
 'use client'
 
-import { DataProvider } from './context/DataContext'
-import { SearchProvider } from './context/DataContext'
+import { DataProvider, SearchProvider } from './context/DataContext'
+import { CartProvider } from './context/CartContext'
+import { AuthProvider } from './context/AuthContext'
 import { useEffect, useState } from 'react'
 
 export function Providers({ children }: { children: React.ReactNode }) {
@@ -16,10 +17,14 @@ export function Providers({ children }: { children: React.ReactNode }) {
   }
 
   return (
-    <SearchProvider>
-      <DataProvider>
-        {children}
-      </DataProvider>
-    </SearchProvider>
+    <AuthProvider>
+      <SearchProvider>
+        <DataProvider>
+          <CartProvider>
+            {children}
+          </CartProvider>
+        </DataProvider>
+      </SearchProvider>
+    </AuthProvider>
   )
 } 

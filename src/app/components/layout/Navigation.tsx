@@ -6,6 +6,7 @@ import Image from 'next/image'
 import { useState } from 'react'
 import { useData, useSearch } from '@/app/context/DataContext'
 import { useRouter, usePathname } from 'next/navigation'
+import { CartIcon } from '../CartIcon'
 
 /**
  * Main navigation component for the website
@@ -92,10 +93,22 @@ export default function Navigation() {
               />
               <FaSearch className="absolute right-3 top-2 text-gray-500" />
             </div>
+            
+            {/* Shopping Bag - Simple and Prominent */}
+            <div className="flex items-center space-x-2 bg-red-600 px-4 py-2 rounded-lg hover:bg-red-700 transition-colors">
+              <CartIcon />
+              <span className="text-sm font-bold text-white">BAG</span>
+            </div>
           </div>
 
           {/* Mobile Navigation Icons */}
           <div className="flex items-center space-x-4 md:hidden">
+            {/* Shopping Bag - Mobile */}
+            <div className="flex items-center space-x-2 bg-red-600 px-3 py-2 rounded-lg">
+              <CartIcon />
+              <span className="text-sm font-bold text-white">BAG</span>
+            </div>
+            
             <button 
               onClick={() => setIsSearchOpen(!isSearchOpen)}
               className="hover:text-blue-200"

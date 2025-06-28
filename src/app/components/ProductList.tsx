@@ -3,7 +3,6 @@
 import React, { useState, useMemo, useEffect } from 'react'
 import { useData, useSearch } from '../context/DataContext'
 import Image from 'next/image'
-import ProductDetailView from './ProductDetailView'
 import { useSearchParams } from 'next/navigation'
 import Link from 'next/link'
 
@@ -14,8 +13,6 @@ export default function ProductList() {
   const [selectedCategory, setSelectedCategory] = useState<number | null>(null)
   const [sortBy, setSortBy] = useState<'name' | 'price' | 'stock'>('name')
   const [sortOrder, setSortOrder] = useState<'asc' | 'desc'>('asc')
-  const [selectedProductId, setSelectedProductId] = useState<number | null>(null)
-  const [isQuickView, setIsQuickView] = useState(false)
 
   // Handle URL parameters
   useEffect(() => {
@@ -64,11 +61,6 @@ export default function ProductList() {
       return sortOrder === 'asc' ? comparison : -comparison
     })
   }, [products, selectedCategory, sortBy, sortOrder, searchQuery, isLoading])
-
-  const handleViewDetails = (productId: number, quickView: boolean = false) => {
-    setSelectedProductId(productId)
-    setIsQuickView(quickView)
-  }
 
   if (isLoading) {
     return (
@@ -127,19 +119,20 @@ export default function ProductList() {
         </div>
       </div>
 
-      {/* Product Grid */}
-      <div className="grid grid-cols-2 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4 md:gap-6">
+      {/* Product Grid - All Horizontal Cards */}
+      <div className="space-y-4">
         {filteredAndSortedProducts.map(product => {
           const category = getCategoryById(product.categoryId)
           return (
-            <Link 
+            <div
               key={product.id} 
-              href={`/products/${product.id}`}
-              className="block border rounded-lg overflow-hidden shadow-lg hover:shadow-xl transition-shadow bg-white"
+              className="border rounded-lg overflow-hidden shadow-lg hover:shadow-xl transition-shadow bg-white group cursor-pointer"
+              onClick={() => window.open(`/products/${product.id}`, '_blank')}
             >
-              {/* Mobile: Horizontal layout */}
-              <div className="md:hidden flex">
-                <div className="relative w-24 h-24 flex-shrink-0">
+              {/* Horizontal Card Layout */}
+              <div className="flex h-32 md:h-40">
+                {/* Product Image */}
+                <div className="relative w-32 md:w-48 flex-shrink-0">
                   <Image
                     src={product.images[0]?.url || '/images/placeholder.jpg'}
                     alt={product.name}
@@ -150,77 +143,44 @@ export default function ProductList() {
                       target.src = '/images/placeholder.jpg'
                     }}
                   />
-                </div>
-                <div className="flex-1 p-3 flex flex-col justify-between">
-                  <div>
-                    <div className="text-xs text-gray-600 mb-1">{category?.name}</div>
-                    <h3 className="font-medium text-gray-900 text-sm mb-1 line-clamp-2">{product.name}</h3>
-                    <p className="text-gray-600 text-xs line-clamp-2">{product.description}</p>
-                  </div>
-                  <div className="flex justify-between items-center mt-2">
-                    <div className="text-lg font-bold text-blue-600">₹{product.price.toLocaleString()}</div>
-                    <div className="text-xs text-gray-600">Stock: {product.stock}</div>
-                  </div>
-                </div>
-              </div>
-
-              {/* Desktop: Vertical layout */}
-              <div className="hidden md:block">
-                <div className="relative h-48 group">
-                  <Image
-                    src={product.images[0]?.url || '/images/placeholder.jpg'}
-                    alt={product.name}
-                    fill
-                    className="object-cover"
-                    onError={(e) => {
-                      const target = e.target as HTMLImageElement
-                      target.src = '/images/placeholder.jpg'
-                    }}
-                  />
-                  {/* Quick View Button */}
-                  <button
-                    onClick={(e) => {
-                      e.preventDefault()
-                      handleViewDetails(product.id, true)
-                    }}
-                    className="absolute inset-0 bg-black bg-opacity-0 group-hover:bg-opacity-30 transition-all duration-200 flex items-center justify-center opacity-0 group-hover:opacity-100"
-                  >
-                    <span className="bg-white text-gray-800 px-4 py-2 rounded-lg text-sm font-medium">
-                      Quick View
-                    </span>
-                  </button>
-                </div>
-                <div className="p-4">
-                  <div className="text-sm text-gray-600 mb-1">{category?.name}</div>
-                  <h3 className="text-lg font-semibold mb-2">{product.name}</h3>
-                  <p className="text-gray-600 text-sm mb-4 line-clamp-2">{product.description}</p>
-                  <div className="flex justify-between items-center">
-                    <div className="text-xl font-bold">₹{product.price.toLocaleString()}</div>
-                    <div className="text-sm text-gray-600">Stock: {product.stock}</div>
-                  </div>
-                  <div className="mt-4 space-y-2">
-                    <button 
-                      onClick={(e) => {
-                        e.preventDefault()
-                        handleViewDetails(product.id, false)
-                      }}
-                      className="w-full bg-blue-600 text-white py-2 rounded-lg hover:bg-blue-700 transition-colors"
-                    >
+                  {/* Hover overlay */}
+                  <div className="absolute inset-0 bg-black bg-opacity-0 group-hover:bg-opacity-20 transition-all duration-200 flex items-center justify-center opacity-0 group-hover:opacity-100">
+                    <span className="bg-white text-gray-800 px-3 py-1 rounded text-sm font-medium">
                       View Details
-                    </button>
+                    </span>
+                  </div>
+                </div>
+                
+                {/* Product Info */}
+                <div className="flex-1 p-4 md:p-6 flex flex-col justify-between">
+                  <div>
+                    <div className="text-xs md:text-sm text-gray-600 mb-1">{category?.name}</div>
+                    <h3 className="font-semibold text-gray-900 text-base md:text-lg mb-2 line-clamp-2">{product.name}</h3>
+                    <p className="text-gray-600 text-sm md:text-base line-clamp-3">{product.description}</p>
+                  </div>
+                  <div className="mt-2">
+                    <div className="flex justify-between items-center mb-3">
+                      <div className="text-xl md:text-2xl font-bold text-blue-600">₹{product.price.toLocaleString()}</div>
+                      <div className="text-sm md:text-base text-gray-600">Stock: {product.stock}</div>
+                    </div>
                     <button 
                       onClick={(e) => {
                         e.preventDefault()
-                        handleViewDetails(product.id, true)
+                        e.stopPropagation()
+                        // Add to cart functionality here
+                        console.log('Add to cart:', product.id)
                       }}
-                      className="w-full border border-blue-600 text-blue-600 py-2 rounded-lg hover:bg-blue-50 transition-colors"
+                      className="w-full bg-blue-600 text-white py-2 px-4 rounded text-sm md:text-base font-medium hover:bg-blue-700 transition-colors flex items-center justify-center gap-2"
                     >
-                      Quick View
+                      <svg className="w-4 h-4 md:w-5 md:h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 3h2l.4 2M7 13h10l4-8H5.4m0 0L7 13m0 0l-2.5 5M7 13l2.5 5m6-5v6a2 2 0 01-2 2H9a2 2 0 01-2-2v-6m8 0V9a2 2 0 00-2-2H9a2 2 0 00-2 2v4.01" />
+                      </svg>
+                      Add to Cart
                     </button>
                   </div>
                 </div>
               </div>
-            </Link>
+            </div>
           )
         })}
       </div>
@@ -229,18 +189,6 @@ export default function ProductList() {
         <div className="text-center py-8 text-gray-500">
           No products found matching your criteria
         </div>
-      )}
-
-      {/* Product Detail Modal */}
-      {selectedProductId && (
-        <ProductDetailView
-          productId={selectedProductId}
-          onClose={() => {
-            setSelectedProductId(null)
-            setIsQuickView(false)
-          }}
-          isQuickView={isQuickView}
-        />
       )}
     </div>
   )

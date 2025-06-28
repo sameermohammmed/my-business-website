@@ -1,5 +1,6 @@
 import React, { useEffect, useRef, useState } from 'react'
 import { useData } from '../context/DataContext'
+import { useCart } from '../context/CartContext'
 import Image from 'next/image'
 import { useRouter } from 'next/navigation'
 import { FaChevronLeft, FaChevronRight } from 'react-icons/fa'
@@ -12,7 +13,8 @@ function getVisibleCount(width: number) {
 }
 
 export default function ProductCarousel() {
-  const { products } = useData()
+  const { products, categories } = useData()
+  const { addItem } = useCart()
   const router = useRouter()
   const [current, setCurrent] = useState(0)
   const [windowWidth, setWindowWidth] = useState(1200)
@@ -117,7 +119,7 @@ export default function ProductCarousel() {
             <div
               key={product.id}
               className="flex flex-col items-center cursor-pointer w-72 sm:w-56 md:w-64 h-80 bg-gray-50 rounded-lg shadow hover:shadow-lg transition p-2 flex-shrink-0 group"
-              onClick={() => router.push(`/products/${product.id}`)}
+              onClick={() => window.open(`/products/${product.id}`, '_blank')}
             >
               <div className="relative w-40 h-40 mb-2">
                 <Image
@@ -137,6 +139,42 @@ export default function ProductCarousel() {
               <h3 className="text-base font-semibold text-gray-900 mb-1 text-center line-clamp-1">{product.name}</h3>
               <p className="text-gray-600 text-xs line-clamp-2 text-center max-w-[10rem]">{product.description}</p>
               <div className="text-lg font-bold text-blue-600 mt-2">₹{product.price.toLocaleString()}</div>
+              
+              {/* Add to Cart Button */}
+              <button
+                onClick={(e) => {
+                  e.preventDefault()
+                  e.stopPropagation()
+                  console.log('Adding to cart from carousel:', product.name, product.id)
+                  addItem({
+                    id: product.id,
+                    name: product.name,
+                    price: product.price,
+                    image: product.images.find(img => img.isMain)?.url || '/images/placeholder.jpg',
+                    category: product.categoryId ? categories.find(c => c.id === product.categoryId)?.name : undefined
+                  })
+                  // Show visual feedback
+                  const button = e.currentTarget
+                  const originalText = button.innerHTML
+                  button.innerHTML = `
+                    <svg class="w-3 h-3 animate-spin" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path>
+                    </svg>
+                    Added!
+                  `
+                  button.classList.add('bg-green-600')
+                  setTimeout(() => {
+                    button.innerHTML = originalText
+                    button.classList.remove('bg-green-600')
+                  }, 1000)
+                }}
+                className="mt-2 bg-blue-600 text-white py-1 px-3 rounded text-xs font-medium hover:bg-blue-700 transition-colors flex items-center justify-center gap-1"
+              >
+                <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 3h2l.4 2M7 13h10l4-8H5.4m0 0L7 13m0 0l-2.5 5M7 13l2.5 5m6-5v6a2 2 0 01-2 2H9a2 2 0 01-2-2v-6m8 0V9a2 2 0 00-2-2H9a2 2 0 00-2 2v4.01" />
+                </svg>
+                Add to Cart
+              </button>
             </div>
           ))}
         </div>

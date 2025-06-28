@@ -5,6 +5,7 @@ import Image from 'next/image'
 import { useState, useEffect, useRef } from 'react'
 import { useData, useSearch } from '../context/DataContext'
 import { useRouter, usePathname } from 'next/navigation'
+import { CartIcon } from './CartIcon'
 
 export default function Navigation() {
   const [isMenuOpen, setIsMenuOpen] = useState(false)
@@ -113,6 +114,8 @@ export default function Navigation() {
             />
             <FaSearch className="absolute right-3 top-2 text-gray-500" />
           </div>
+          {/* Cart Icon */}
+          <CartIcon />
           {/* Contact Info - Responsive */}
           <div className="flex flex-wrap items-center gap-x-4 gap-y-1 ml-6 whitespace-nowrap max-w-xl overflow-x-auto">
             <a href="tel:+918309067404" className="flex items-center hover:text-blue-200 min-w-fit">
@@ -144,6 +147,8 @@ export default function Navigation() {
               <FaSearch className="text-2xl text-white" />
             </button>
           )}
+          {/* Cart Icon for Mobile */}
+          {!isSearchOpen && <CartIcon />}
           {!isSearchOpen && (
             <button 
               onClick={() => {
