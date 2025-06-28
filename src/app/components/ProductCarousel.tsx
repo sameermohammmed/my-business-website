@@ -116,7 +116,7 @@ export default function ProductCarousel() {
           {visibleProducts.map((product) => (
             <div
               key={product.id}
-              className="flex flex-col items-center cursor-pointer w-72 sm:w-56 md:w-64 h-80 bg-gray-50 rounded-lg shadow hover:shadow-lg transition p-2 flex-shrink-0"
+              className="flex flex-col items-center cursor-pointer w-72 sm:w-56 md:w-64 h-80 bg-gray-50 rounded-lg shadow hover:shadow-lg transition p-2 flex-shrink-0 group"
               onClick={() => router.push(`/products/${product.id}`)}
             >
               <div className="relative w-40 h-40 mb-2">
@@ -127,9 +127,16 @@ export default function ProductCarousel() {
                   className="object-contain rounded-lg"
                   priority
                 />
+                {/* Hover overlay */}
+                <div className="absolute inset-0 bg-black bg-opacity-0 group-hover:bg-opacity-20 transition-all duration-200 rounded-lg flex items-center justify-center opacity-0 group-hover:opacity-100">
+                  <span className="bg-white text-gray-800 px-3 py-1 rounded text-sm font-medium">
+                    View Details
+                  </span>
+                </div>
               </div>
               <h3 className="text-base font-semibold text-gray-900 mb-1 text-center line-clamp-1">{product.name}</h3>
               <p className="text-gray-600 text-xs line-clamp-2 text-center max-w-[10rem]">{product.description}</p>
+              <div className="text-lg font-bold text-blue-600 mt-2">₹{product.price.toLocaleString()}</div>
             </div>
           ))}
         </div>

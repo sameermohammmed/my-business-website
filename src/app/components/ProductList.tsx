@@ -5,6 +5,7 @@ import { useData, useSearch } from '../context/DataContext'
 import Image from 'next/image'
 import ProductDetailView from './ProductDetailView'
 import { useSearchParams } from 'next/navigation'
+import Link from 'next/link'
 
 export default function ProductList() {
   const { products, categories, getCategoryById, isLoading, error } = useData()
@@ -127,56 +128,99 @@ export default function ProductList() {
       </div>
 
       {/* Product Grid */}
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
+      <div className="grid grid-cols-2 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4 md:gap-6">
         {filteredAndSortedProducts.map(product => {
           const category = getCategoryById(product.categoryId)
           return (
-            <div key={product.id} className="border rounded-lg overflow-hidden shadow-lg hover:shadow-xl transition-shadow">
-              <div className="relative h-48 group">
-                <Image
-                  src={product.images[0]?.url || '/placeholder.jpg'}
-                  alt={product.name}
-                  fill
-                  className="object-cover"
-                  onError={(e) => {
-                    const target = e.target as HTMLImageElement
-                    target.src = '/placeholder.jpg'
-                  }}
-                />
-                {/* Quick View Button */}
-                <button
-                  onClick={() => handleViewDetails(product.id, true)}
-                  className="absolute inset-0 bg-black bg-opacity-0 group-hover:bg-opacity-30 transition-all duration-200 flex items-center justify-center opacity-0 group-hover:opacity-100"
-                >
-                  <span className="bg-white text-gray-800 px-4 py-2 rounded-lg text-sm font-medium">
-                    Quick View
-                  </span>
-                </button>
-              </div>
-              <div className="p-4">
-                <div className="text-sm text-gray-600 mb-1">{category?.name}</div>
-                <h3 className="text-lg font-semibold mb-2">{product.name}</h3>
-                <p className="text-gray-600 text-sm mb-4 line-clamp-2">{product.description}</p>
-                <div className="flex justify-between items-center">
-                  <div className="text-xl font-bold">₹{product.price.toLocaleString()}</div>
-                  <div className="text-sm text-gray-600">Stock: {product.stock}</div>
+            <Link 
+              key={product.id} 
+              href={`/products/${product.id}`}
+              className="block border rounded-lg overflow-hidden shadow-lg hover:shadow-xl transition-shadow bg-white"
+            >
+              {/* Mobile: Horizontal layout */}
+              <div className="md:hidden flex">
+                <div className="relative w-24 h-24 flex-shrink-0">
+                  <Image
+                    src={product.images[0]?.url || '/images/placeholder.jpg'}
+                    alt={product.name}
+                    fill
+                    className="object-cover"
+                    onError={(e) => {
+                      const target = e.target as HTMLImageElement
+                      target.src = '/images/placeholder.jpg'
+                    }}
+                  />
                 </div>
-                <div className="mt-4 space-y-2">
-                  <button 
-                    onClick={() => handleViewDetails(product.id, false)}
-                    className="w-full bg-blue-600 text-white py-2 rounded-lg hover:bg-blue-700 transition-colors"
-                  >
-                    View Details
-                  </button>
-                  <button 
-                    onClick={() => handleViewDetails(product.id, true)}
-                    className="w-full border border-blue-600 text-blue-600 py-2 rounded-lg hover:bg-blue-50 transition-colors"
-                  >
-                    Quick View
-                  </button>
+                <div className="flex-1 p-3 flex flex-col justify-between">
+                  <div>
+                    <div className="text-xs text-gray-600 mb-1">{category?.name}</div>
+                    <h3 className="font-medium text-gray-900 text-sm mb-1 line-clamp-2">{product.name}</h3>
+                    <p className="text-gray-600 text-xs line-clamp-2">{product.description}</p>
+                  </div>
+                  <div className="flex justify-between items-center mt-2">
+                    <div className="text-lg font-bold text-blue-600">₹{product.price.toLocaleString()}</div>
+                    <div className="text-xs text-gray-600">Stock: {product.stock}</div>
+                  </div>
                 </div>
               </div>
-            </div>
+
+              {/* Desktop: Vertical layout */}
+              <div className="hidden md:block">
+                <div className="relative h-48 group">
+                  <Image
+                    src={product.images[0]?.url || '/images/placeholder.jpg'}
+                    alt={product.name}
+                    fill
+                    className="object-cover"
+                    onError={(e) => {
+                      const target = e.target as HTMLImageElement
+                      target.src = '/images/placeholder.jpg'
+                    }}
+                  />
+                  {/* Quick View Button */}
+                  <button
+                    onClick={(e) => {
+                      e.preventDefault()
+                      handleViewDetails(product.id, true)
+                    }}
+                    className="absolute inset-0 bg-black bg-opacity-0 group-hover:bg-opacity-30 transition-all duration-200 flex items-center justify-center opacity-0 group-hover:opacity-100"
+                  >
+                    <span className="bg-white text-gray-800 px-4 py-2 rounded-lg text-sm font-medium">
+                      Quick View
+                    </span>
+                  </button>
+                </div>
+                <div className="p-4">
+                  <div className="text-sm text-gray-600 mb-1">{category?.name}</div>
+                  <h3 className="text-lg font-semibold mb-2">{product.name}</h3>
+                  <p className="text-gray-600 text-sm mb-4 line-clamp-2">{product.description}</p>
+                  <div className="flex justify-between items-center">
+                    <div className="text-xl font-bold">₹{product.price.toLocaleString()}</div>
+                    <div className="text-sm text-gray-600">Stock: {product.stock}</div>
+                  </div>
+                  <div className="mt-4 space-y-2">
+                    <button 
+                      onClick={(e) => {
+                        e.preventDefault()
+                        handleViewDetails(product.id, false)
+                      }}
+                      className="w-full bg-blue-600 text-white py-2 rounded-lg hover:bg-blue-700 transition-colors"
+                    >
+                      View Details
+                    </button>
+                    <button 
+                      onClick={(e) => {
+                        e.preventDefault()
+                        handleViewDetails(product.id, true)
+                      }}
+                      className="w-full border border-blue-600 text-blue-600 py-2 rounded-lg hover:bg-blue-50 transition-colors"
+                    >
+                      Quick View
+                    </button>
+                  </div>
+                </div>
+              </div>
+            </Link>
           )
         })}
       </div>
