@@ -40,7 +40,7 @@ export default function ProductDetailPage() {
       // Add the specified quantity to cart
       for (let i = 0; i < quantity; i++) {
         addItem({
-          id: product.id,
+          id: String(product.id),
           name: product.name,
           price: product.price,
           image: product.images[0]?.url || '/images/placeholder.jpg',

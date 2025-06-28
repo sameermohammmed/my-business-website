@@ -147,7 +147,7 @@ export default function ProductCarousel() {
                   e.stopPropagation()
                   console.log('Adding to cart from carousel:', product.name, product.id)
                   addItem({
-                    id: product.id,
+                    id: String(product.id),
                     name: product.name,
                     price: product.price,
                     image: product.images.find(img => img.isMain)?.url || '/images/placeholder.jpg',

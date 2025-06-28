@@ -137,7 +137,7 @@ export default function ProductList({ categoryId }: { categoryId?: number }) {
                         e.stopPropagation()
                         console.log('Adding to cart:', product.name, product.id)
                         addItem({
-                          id: product.id,
+                          id: String(product.id),
                           name: product.name,
                           price: product.price,
                           image: product.images[0]?.url || '/images/placeholder.jpg',
